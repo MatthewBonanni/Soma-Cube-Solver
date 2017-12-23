@@ -1,80 +1,85 @@
 import numpy as np
 
-piece0 = [np.array([[0],[0],[0]]),
+cube_size = 4
+default_place = [np.array([[0], [0], [0]]), 0]
+
+shape0 = [np.array([[0],[0],[0]]),
           np.array([[1],[0],[0]]),
           np.array([[2],[0],[0]]),
           np.array([[0],[1],[0]]),
           np.array([[0],[2],[0]])]
-piece1 = [np.array([[0],[0],[0]]),
+shape1 = [np.array([[0],[0],[0]]),
           np.array([[0],[1],[0]]),
           np.array([[1],[1],[0]]),
           np.array([[0],[2],[0]]),
           np.array([[0],[3],[0]])]
-piece2 = [np.array([[0],[0],[0]]),
+shape2 = [np.array([[0],[0],[0]]),
           np.array([[0],[0],[1]]),
           np.array([[1],[0],[0]]),
           np.array([[0],[1],[0]]),
           np.array([[1],[1],[0]])]
-piece3 = [np.array([[0],[0],[0]]),
+shape3 = [np.array([[0],[0],[0]]),
           np.array([[0],[0],[1]]),
           np.array([[0],[1],[0]]),
           np.array([[1],[1],[0]]),
           np.array([[2],[1],[0]]),
           np.array([[1],[2],[0]])]
-piece4 = [np.array([[0],[0],[0]]),
+shape4 = [np.array([[0],[0],[0]]),
           np.array([[1],[0],[0]]),
           np.array([[2],[0],[0]]),
           np.array([[0],[1],[0]]),
           np.array([[0],[1],[1]])]
-piece5 = [np.array([[0],[0],[0]]),
+shape5 = [np.array([[0],[0],[0]]),
           np.array([[1],[0],[0]]),
           np.array([[2],[0],[0]]),
           np.array([[1],[1],[0]]),
           np.array([[1],[1],[1]])]
-piece6 = [np.array([[0],[0],[0]]),
+shape6 = [np.array([[0],[0],[0]]),
           np.array([[1],[0],[0]]),
           np.array([[1],[1],[0]]),
           np.array([[1],[1],[1]]),
           np.array([[2],[1],[1]])]
-piece7 = [np.array([[0],[1],[0]]),
+shape7 = [np.array([[0],[1],[0]]),
           np.array([[1],[1],[0]]),
           np.array([[1],[2],[0]]),
           np.array([[2],[1],[0]]),
           np.array([[1],[0],[1]])]
-piece8 = [np.array([[0],[0],[0]]),
+shape8 = [np.array([[0],[0],[0]]),
           np.array([[1],[0],[0]]),
           np.array([[2],[0],[0]]),
           np.array([[0],[1],[0]]),
           np.array([[0],[2],[0]]),
           np.array([[0],[1],[1]])]
-piece9 = [np.array([[0],[0],[0]]),
+shape9 = [np.array([[0],[0],[0]]),
           np.array([[1],[0],[0]]),
           np.array([[2],[0],[0]]),
           np.array([[0],[1],[0]]),
           np.array([[0],[2],[0]]),
           np.array([[0],[2],[1]])]
-piece10 = [np.array([[0],[0],[0]]),
+shape10 = [np.array([[0],[0],[0]]),
            np.array([[0],[0],[1]]),
            np.array([[1],[0],[0]]),
            np.array([[1],[1],[0]]),
            np.array([[2],[1],[0]])]
-piece11 = [np.array([[0],[0],[0]]),
+shape11 = [np.array([[0],[0],[0]]),
            np.array([[0],[1],[0]]),
            np.array([[1],[1],[0]]),
            np.array([[1],[2],[0]]),
            np.array([[1],[3],[0]])]
 
-pieces = [piece0,
-          piece1,
-          piece2,
-          piece3,
-          piece4,
-          piece5,
-          piece6,
-          piece7,
-          piece8,
-          piece9,
-          piece10,
-          piece11]
+shapes = [shape0,
+          shape1,
+          shape2,
+          shape3,
+          shape4,
+          shape5,
+          shape6,
+          shape7,
+          shape8,
+          shape9,
+          shape10,
+          shape11]
+ids = [i for i in range(len(shapes))]
+places = [default_place for shape in shapes]
 
-cube_size = 4
+pieces = [list(x) for x in zip(ids, shapes, places)]
