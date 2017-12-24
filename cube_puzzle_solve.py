@@ -183,4 +183,13 @@ while i < len(pieces):
 if not solved(current_cube):
     raise Exception('No solution found')
 
+total_time = time.time() - start
+
+with open('solution.txt', 'w') as f:
+    print(current_cube, file=f)
+    print(file=f)
+    print('Calculation Time: ' + str(timedelta(seconds=total_time)), file=f)
+    print(file=f)
+    print(pieces, file=f)
+
 print('Finished!')
