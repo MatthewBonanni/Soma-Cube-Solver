@@ -154,6 +154,7 @@ except IOError:
 
 print('Assembling cube...')
 
+loop_time = time.time()
 # Initialize iteration variable
 i = 0
 # Initialize empty cube
@@ -161,13 +162,16 @@ current_cube = -1 * np.ones((cube_size, cube_size, cube_size), dtype='int')
 
 # Iterate over list of pieces
 while i < len(pieces):
+    # Every 30 seconds, display the current status of the cube
+    if time.time() - loop_time > 30:
+        disp_progress()
+        loop_time = time.time()
     current_locn = pieces[i][3]
     tshape = pieces[i][2][current_locn]
     # Check if current piece fits in the current spot
     if not shape_conflict(tshape, current_cube):
         # It fits, insert it and go to the next piece
         current_cube = insert(pieces[i], current_cube)
-        disp_progress()
         i = i + 1
         continue
     # It doesn't fit. Check if there are any other spots left to try
@@ -180,7 +184,6 @@ while i < len(pieces):
         pieces[i][3] = 0
         # Remove the previous piece from the cube
         current_cube = remove(pieces[i-1], current_cube)
-        disp_progress()
         # If the previous piece has other spots left to try, try the next one
         if not last_locn(pieces[i-1]):
             pieces[i-1][3] = pieces[i-1][3] + 1
