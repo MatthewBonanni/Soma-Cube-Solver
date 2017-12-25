@@ -2,13 +2,17 @@ import numpy as np
 import time
 from datetime import timedelta
 from functools import reduce
+import pickle
 
-#from tetris_cube_pieces import pieces, cube_size, default_place
-from simple_cube_pieces import pieces, cube_size, default_place
+from tetris_cube_pieces import pieces, cube_size, default_place
+#from simple_cube_pieces import pieces, cube_size, default_place
 
-# A Piece is an [ID, Shape, Place]
+# A Piece is an [ID, Shape, TShapes, Locn]
 
-# A Place is a [Posn, Orient]
+# A TShape is a transformed shape
+# Locn is a number indicating which Transform currently represents the piece
+
+# A Placement is a [Posn, Orient]
 # A Posn is an np.array([[x], [y], [z]])
 # An Orient is an Integer in [0, 23]
 
@@ -47,40 +51,27 @@ for z_count in [1, 3]:
             return repeat(simple_rot, 'y', y_count)(z_rot)
         rot_list.append(zy_rot)
 
-def transform(piece):
-    '''Transforms piece according to its place'''
-    shape = piece[1]
-    place = piece[2]
+def transform(shape, place):
+    '''Transforms the given shape according to the given place'''
     def translate(pt):
         return pt + place[0]
     def rotate(pt):
         return rot_list[place[1]](pt)
     return [rotate(translate(pt)) for pt in shape]
 
-def boundary_conflict(piece):
+def boundary_conflict(tshape):
     '''Determines if the given piece lies outside the cube'''
-    tshape = transform(piece)
     for pt in tshape:
         if any(coord < 0 or coord >= cube_size for coord in pt):
             return True
     return False
 
-def shape_conflict(piece, cube):
+def shape_conflict(tshape, cube):
     '''Determines if the given piece interferes with another in the given cube'''
-    tshape = transform(piece)
     for pt in tshape:
         if cube[pt[0][0]][pt[1][0]][pt[2][0]] != -1:
             return True
     return False
-
-def conflict(piece, cube):
-    '''Determines if given piece has any conflicts in given cube'''
-    if boundary_conflict(piece):
-        return True
-    elif shape_conflict(piece, cube):
-        return True
-    else:
-        return False
 
 def iter_posn(posn):
     '''Iterates the given posn'''
@@ -96,31 +87,29 @@ def iter_place(place):
     else:
         return [place[0], place[1] + 1]
 
-def iter_piece(piece):
-    '''Iterates the placement of the given piece'''
-    piece[2] = iter_place(piece[2])
-    return piece
-
-def last_iter(piece):
-    '''Determines if the given piece has the last possible placement'''
-    place = piece[2]
+def last_iter(place):
+    '''Determines if the given place is the last possible placement'''
     return (np.array_equal(place[0], np.array([[cube_size - 1],
                                                [cube_size - 1],
                                                [cube_size - 1]])) and
             place[1] == 23)
 
+def last_locn(piece):
+    '''Determines if the given piece's location is set to its last tshape'''
+    return piece[3] == len(piece[2]) - 1
+
 def insert(piece, cube):
     '''Inserts the given piece into the given cube'''
-    tshape = transform(piece)
     pid = piece[0]
-    for pt in tshape:
+    locn = piece[3]
+    for pt in piece[2][locn]:
         cube[pt[0][0]][pt[1][0]][pt[2][0]] = pid
     return cube
 
 def remove(piece, cube):
     '''Removes the given piece from the given cube'''
-    tshape = transform(piece)
-    for pt in tshape:
+    locn = piece[3]
+    for pt in piece[2][locn]:
         cube[pt[0][0]][pt[1][0]][pt[2][0]] = -1
     return cube
 
@@ -128,9 +117,10 @@ def solved(cube):
     '''Determines whether the cube is solved'''
     return cube[cube == -1].size == 0
 
-def progress():
-    '''Displays progress'''
+def disp_progress():
+    '''Displays disp_progress'''
     print('Progress:')
+    print()
     print(current_cube)
     print()
     elapsed = time.time() - start
@@ -138,10 +128,31 @@ def progress():
     print()
     print()
 
+##### SOLVING ALGORITHM #####
 
 start = time.time()
 
-##### SOLVING ALGORITHM #####
+try:
+    print('Loading piece transformations...')
+    with open('transformations.pckl', 'rb') as data:
+        pieces = pickle.load(data)
+except IOError:
+    print('Data not available. Calculating piece transformations...')
+    for piece in pieces:
+        print('disp_progress: Piece ' + str(piece[0] + 1) + '/' + str(len(pieces)))
+        current_place = default_place
+        piece[2].append(piece[1])
+        while not last_iter(current_place):
+            tshape = transform(piece[1], current_place)
+            current_place = iter_place(current_place)
+            if not boundary_conflict(tshape):
+                piece[2].append(tshape)
+    with open('transformations.pckl', 'wb') as data:
+        pickle.dump(pieces, data)
+    print('DONE')
+    print()
+
+print('Assembling cube...')
 
 # Initialize iteration variable
 i = 0
@@ -150,33 +161,35 @@ current_cube = -1 * np.ones((cube_size, cube_size, cube_size), dtype='int')
 
 # Iterate over list of pieces
 while i < len(pieces):
+    current_locn = pieces[i][3]
+    tshape = pieces[i][2][current_locn]
     # Check if current piece fits in the current spot
-    if not conflict(pieces[i], current_cube):
+    if not shape_conflict(tshape, current_cube):
         # It fits, insert it and go to the next piece
         current_cube = insert(pieces[i], current_cube)
-        progress()
+        disp_progress()
         i = i + 1
         continue
     # It doesn't fit. Check if there are any other spots left to try
-    elif last_iter(pieces[i]):
+    elif last_locn(pieces[i]):
         # No spots left.
         # If this is the first piece, the puzzle is invalid
         if i == 0:
             raise Exception('Invalid Cube')
         # Reset the placement of the current piece
-        pieces[i][2] = default_place
+        pieces[i][3] = 0
         # Remove the previous piece from the cube
         current_cube = remove(pieces[i-1], current_cube)
-        progress()
+        disp_progress()
         # If the previous piece has other spots left to try, try the next one
-        if not last_iter(pieces[i-1]):
-            pieces[i-1] = iter_piece(pieces[i-1])
+        if not last_locn(pieces[i-1]):
+            pieces[i-1][3] = pieces[i-1][3] + 1
         # Go back to the previous piece
         i = i - 1
         continue
     # There are spots left, try the next one
     else:
-        pieces[i] = iter_piece(pieces[i])
+        pieces[i][3] = current_locn + 1
         continue
 
 #Ensure the solution is valid
