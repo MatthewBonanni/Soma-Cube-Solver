@@ -16,7 +16,11 @@ shapes = [shape0,
           shape1,
           shape2,
           shape3]
-ids = [i for i in range(len(shapes))]
-places = [default_place for shape in shapes]
 
-pieces = [list(x) for x in zip(ids, shapes, places)]
+piece_count = len(shapes)
+
+ids = [i for i in range(piece_count)]
+tshapes = [[] for i in range(piece_count)]
+locns = [0 for i in range(piece_count)]
+
+pieces = [list(x) for x in zip(ids, shapes, tshapes, locns)]
